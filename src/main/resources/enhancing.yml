@@ -1,0 +1,55 @@
+# RPGCore 장비 강화 설정 (enhancing.yml)
+# EnhanceManager.java와 키 값을 일치시켰습니다.
+
+levels:
+  # --- 안전 강화 구간 (+0 ~ +3) ---
+  '0': # +0 -> +1
+    success-rate: 1.0  # 100%
+    destroy-rate: 0.0
+    cost: 100          # 강화 비용
+  '1': # +1 -> +2
+    success-rate: 1.0
+    destroy-rate: 0.0
+    cost: 200
+  '2': # +2 -> +3
+    success-rate: 1.0
+    destroy-rate: 0.0
+    cost: 300
+    
+  # --- 실패(유지) 시작 구간 (+3 ~ +6) ---
+  '3': # +3 -> +4
+    success-rate: 0.8  # 80%
+    destroy-rate: 0.0  # 파괴 없음 (실패 시 유지)
+    cost: 500
+  '4': # +4 -> +5
+    success-rate: 0.7
+    destroy-rate: 0.0
+    cost: 700
+  '5': # +5 -> +6
+    success-rate: 0.6
+    destroy-rate: 0.0
+    cost: 1000
+    
+  # --- 파괴 시작 구간 (+6 ~ +10) ---
+  '6': # +6 -> +7
+    success-rate: 0.5  # 50%
+    destroy-rate: 0.1  # 10% (나머지 40%는 실패/유지)
+    cost: 2000
+  '7': # +7 -> +8
+    success-rate: 0.4
+    destroy-rate: 0.15
+    cost: 3000
+  '8': # +8 -> +9
+    success-rate: 0.3
+    destroy-rate: 0.2
+    cost: 5000
+  '9': # +9 -> +10
+    success-rate: 0.2
+    destroy-rate: 0.3
+    cost: 10000
+    
+  # 10강 이후
+  '10':
+    success-rate: 0.1
+    destroy-rate: 0.5
+    cost: 20000

@@ -1,0 +1,41 @@
+# RPGCore 메인 설정 (config.yml)
+# 상업용 서버 최적화 버전 (Supabase/PostgreSQL 지원)
+
+# --- 데이터베이스 설정 (Supabase) ---
+database:
+  enabled: true
+  # 방금 찾아주신 주소입니다!
+  host: "aws-1-ap-northeast-2.pooler.supabase.com"
+  port: 5432
+  database: "postgres"
+  user: "postgres.gswjhopvmqemgnvpgnga"
+  
+  # [중요] 아까 프로젝트 만들 때 설정한 비밀번호를 여기에 적으세요!
+  password: "rladudwo7@"
+  
+  pool-size: 10
+
+# --- 게임플레이 밸런스 설정 ---
+gameplay:
+  defense-constant: 100.0
+  memory-cleanup-interval: 300
+
+# --- 마나 재생 설정 ---
+mana-regeneration:
+  interval-ticks: 20
+  rate-per-tick: 5.0
+
+# --- 몹 처치 경험치 ---
+mob-experience:
+  SkeletonKing: 1000.0
+  GoblinScout: 15.0
+  OrcWarrior: 80.0
+  MushroomKing: 500.0
+  GiantZombie: 200.0
+
+# --- 데미지 스킨 설정 ---
+damage-skins:
+  enable: true
+  font-offset-x: 0.25
+  font-offset-y: 0.5
+  display-duration-ticks: 20

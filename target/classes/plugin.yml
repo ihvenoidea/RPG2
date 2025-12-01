@@ -1,0 +1,64 @@
+# 플러그인의 기본 정보
+name: RPGCore
+version: 1.0.0-SNAPSHOT
+main: com.mahirung.rpgcore.RPGCore
+api-version: '1.21' # 대상 버전 1.21.4
+author: Mahirung (Developer)
+description: RPG 전투, 스킬, 강화, 룬 시스템을 관리하는 코어 플러그인입니다.
+
+# --- 의존성 플러그인 (필수) ---
+depend:
+  - MythicMobs
+  - Vault
+  - ItemsAdder
+  - FastAsyncWorldEdit
+
+# --- 명령어 등록 ---
+commands:
+  # 1. 메인 명령어
+  rpgcore:
+    description: RPGCore 플러그인의 메인 명령어입니다.
+    usage: /rpgcore [reload]
+    aliases: [rpg]
+    permission: rpgcore.admin.reload
+    permission-message: 이 명령어를 실행할 권한이 없습니다.
+
+  # 2. 직업 명령어
+  class:
+    description: 직업 선택 GUI를 엽니다.
+    usage: /class
+    aliases: [직업, classes]
+
+  # 3. 재련 명령어
+  refine:
+    description: 광물 재련 GUI를 엽니다.
+    usage: /refine
+    aliases: [재련]
+
+  # 4. 강화 명령어
+  enhance:
+    description: 장비 강화 GUI를 엽니다.
+    usage: /enhance
+    aliases: [강화]
+
+  # 5. 데미지 스킨 명령어
+  damageskin:
+    description: 데미지 스킨 선택 GUI를 엽니다.
+    usage: /damageskin
+    aliases: [스킨, 스킨선택]
+
+# --- 권한 설정 ---
+permissions:
+  rpgcore.admin:
+    description: RPGCore 플러그인의 모든 관리자 권한입니다.
+    default: op
+    children:
+      rpgcore.admin.reload: true
+  
+  rpgcore.admin.reload:
+    description: /rpgcore reload 명령어를 사용할 수 있게 합니다.
+    default: op
+
+  rpgcore.user:
+    description: 플러그인의 기본 기능(직업 등)을 사용합니다.
+    default: true

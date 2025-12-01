@@ -1,0 +1,38 @@
+# 마법사 직업 설정
+gui-icon:
+  display-name: "&b[마법사]"
+  material: "BLAZE_ROD"
+  lore:
+    - "&7강력한 마법 공격을 구사합니다."
+    - "&f- 마나: 매우 높음"
+    - "&e클릭하여 선택"
+
+weapon:
+  material: "BLAZE_ROD"
+  display-name: "&b마법사의 지팡이"
+  nbt: { class_weapon_id: "mage" }
+  lore: [ "&7마법사 전용 무기" ]
+
+base-stats:
+  attack: 5.0
+  max-mana: 200.0
+  defense: 5.0
+  crit-chance: 0.05
+  crit-damage: 0.50
+
+stats-per-level:
+  attack: 0.5
+  max-mana: 5.0
+  defense: 0.5
+  crit-chance: 0.002
+  crit-damage: 0.005
+
+skills:
+  basic-attack:
+    mythic-skill-id: "MageBasicFireball"
+    mana-cost: 5.0
+    cooldown: 1.0
+  skill-1:
+    mythic-skill-id: "MageIceShard"
+    mana-cost: 30.0
+    cooldown: 5.0

@@ -1,0 +1,23 @@
+# RPGCore 룬 설정 (runes.yml)
+
+removal-item:
+  itemsadder-id: "itemsadder:rune_remover_scroll"
+
+runes:
+  attack_rune_1:
+    itemsadder-id: "itemsadder:attack_rune_1"
+    applicable-to: [ "SWORD", "AXE" ]
+    stats:
+      attack: 5.0
+
+  defense_rune_1:
+    itemsadder-id: "itemsadder:defense_rune_1"
+    applicable-to: [ "HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS" ]
+    stats:
+      defense: 10.0
+
+  crit_rune_1:
+    itemsadder-id: "itemsadder:crit_rune_1"
+    applicable-to: [ "SWORD" ]
+    stats:
+      crit-chance: 0.05

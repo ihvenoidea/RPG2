@@ -1,0 +1,38 @@
+# 전사 직업 설정
+gui-icon:
+  display-name: "&c[전사]"
+  material: "IRON_SWORD"
+  lore:
+    - "&7근접 전투의 전문가입니다."
+    - "&f- 체력/방어력: 높음"
+    - "&e클릭하여 선택"
+
+weapon:
+  material: "IRON_SWORD"
+  display-name: "&c전사의 검"
+  nbt: { class_weapon_id: "warrior" }
+  lore: [ "&7전사 전용 무기" ]
+
+base-stats:
+  attack: 10.0
+  max-mana: 50.0
+  defense: 15.0
+  crit-chance: 0.05
+  crit-damage: 0.25
+
+stats-per-level:
+  attack: 2.0
+  max-mana: 1.5
+  defense: 1.0
+  crit-chance: 0.001
+  crit-damage: 0.002
+
+skills:
+  basic-attack:
+    mythic-skill-id: "WarriorBasicAttack"
+    mana-cost: 0.0
+    cooldown: 0.5
+  skill-1:
+    mythic-skill-id: "WarriorDash"
+    mana-cost: 15.0
+    cooldown: 8.0

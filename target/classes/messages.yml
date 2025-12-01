@@ -1,0 +1,16 @@
+# 메시지 설정
+prefix: "&a[RPGCore] &f"
+
+no-permission: "&c권한이 없습니다."
+player-only: "&c플레이어만 사용 가능합니다."
+error-occurred: "&c오류가 발생했습니다."
+
+# 파티 관련
+party-invite-sent: "&a'{0}'님을 초대했습니다."
+party-invite-received: "&a'{0}'님이 초대했습니다. (/party accept)"
+party-joined: "&a'{0}'님이 파티에 합류했습니다."
+party-left: "&c'{0}'님이 파티를 떠났습니다."
+
+# 던전 관련
+dungeon-enter-success: "&a'{0}' 던전에 입장합니다!"
+dungeon-cooldown-fail: "&c던전 쿨타임이 남았습니다."

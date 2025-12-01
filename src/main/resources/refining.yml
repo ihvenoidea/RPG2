@@ -1,0 +1,26 @@
+# RPGCore 재련 설정 (refining.yml)
+
+durations:
+  hour: 3600
+  half_hour: 1800
+  twenty_min: 1200
+  five_min: 300
+
+recipes:
+  coal_refine:
+    input: { material: "COAL", amount: 64 }
+    catalyst: { material: "PAPER", amount: 1, nbt: { "itemsadder_id": "refining_ticket" } }
+    result: { material: "IRON_NUGGET", amount: 1, nbt: { "rpgcore_item_id": "enhance_material_low" } }
+    duration-key: "hour"
+
+  iron_refine:
+    input: { material: "IRON_INGOT", amount: 64 }
+    catalyst: { material: "PAPER", amount: 1, nbt: { "itemsadder_id": "refining_ticket" } }
+    result: { material: "IRON_INGOT", amount: 1, nbt: { "rpgcore_item_id": "enhance_material_mid" } }
+    duration-key: "hour"
+
+  diamond_refine:
+    input: { material: "DIAMOND", amount: 32 }
+    catalyst: { material: "PAPER", amount: 1, nbt: { "itemsadder_id": "refining_ticket" } }
+    result: { material: "DIAMOND", amount: 1, nbt: { "rpgcore_item_id": "enhance_material_high" } }
+    duration-key: "twenty_min"

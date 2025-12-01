@@ -28,11 +28,26 @@ stats-per-level:
   crit-damage: 0.002
 
 skills:
+  # 기본 공격 (좌클릭)
   basic-attack:
-    mythic-skill-id: "WarriorBasicAttack"
+    mythic-skill-id: "Brutal_Combo"
     mana-cost: 0.0
     cooldown: 0.5
+
+  # 1번 스킬 (우클릭) - 레벨 5부터 사용 가능
   skill-1:
-    mythic-skill-id: "WarriorDash"
-    mana-cost: 15.0
+    mythic-skill-id: "Berserkers_Leap"
+    mana-cost: 20.0
     cooldown: 8.0
+
+  # 2번 스킬 (쉬프트 + 좌클릭) - 레벨 10부터 사용 가능
+  skill-2:
+    mythic-skill-id: "Relentless_Whirlwind"
+    mana-cost: 30.0
+    cooldown: 15.0
+
+  # 3번 스킬 (쉬프트 + 우클릭) - 레벨 20부터 사용 가능 (궁극기)
+  skill-3:
+    mythic-skill-id: "Strike_Of_Fury"
+    mana-cost: 50.0
+    cooldown: 60.0

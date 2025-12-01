@@ -4,12 +4,14 @@ import com.mahirung.rpgcore.RPGCore;
 import com.mahirung.rpgcore.gui.RefineGUI;
 import com.mahirung.rpgcore.util.ChatUtil;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
@@ -70,7 +72,9 @@ public class RefineManager {
         activeTasks.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>())
                 .add(new ActiveRefineTask(recipeId, endTime));
         saveActiveTasksToFile();
-        player.sendMessage(ChatUtil.format("&a재련 시작: " + recipeId));
+        
+        player.sendMessage(ChatUtil.format("&a[재련] &f작업이 시작되었습니다! (" + (recipe.getDurationMillis() / 1000) + "초 소요)"));
+        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 1f);
     }
 
     public void handleClaimItem(Player player) {
@@ -89,17 +93,18 @@ public class RefineManager {
         tasks.remove(done);
         saveActiveTasksToFile();
         player.sendMessage(ChatUtil.format("&a아이템 수령 완료!"));
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
     }
 
     public void openRefineGUI(Player player) {
         new RefineGUI(plugin, activeTasks.getOrDefault(player.getUniqueId(), new ArrayList<>())).open(player);
     }
 
-    /** GUI 클릭 처리 (수정됨) */
+    /** GUI 클릭 처리 */
     public void handleGUIClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        // [Fix] 1. 내 인벤토리 클릭 허용 (재료 집기)
+        // 1. 내 인벤토리 클릭 허용 (재료 집기)
         if (event.getClickedInventory() != null && event.getClickedInventory().getType() == InventoryType.PLAYER) {
             event.setCancelled(false);
             return;
@@ -110,7 +115,7 @@ public class RefineManager {
 
         int slot = event.getSlot();
 
-        // [Fix] 3. 재료(Input)와 촉매(Catalyst) 슬롯 허용
+        // 3. 재료(Input)와 촉매(Catalyst) 슬롯 허용
         if (slot == RefineGUI.INPUT_SLOT || slot == RefineGUI.CATALYST_SLOT) {
             event.setCancelled(false);
             return;
@@ -118,11 +123,76 @@ public class RefineManager {
 
         // 4. 버튼 처리
         if (slot == RefineGUI.START_BUTTON_SLOT) {
-            player.sendMessage("GUI 재련 시작 기능은 레시피 매칭 로직 구현이 필요합니다.");
+            // [추가] 제작 버튼 클릭 시 레시피 확인 및 시작
+            tryStartRefine(player, event.getInventory());
+            
         } else if (slot == RefineGUI.RESULT_SLOT) {
             handleClaimItem(player);
             player.closeInventory();
         }
+    }
+
+    /** [신규] GUI 아이템을 확인하고 재련 시작 시도 */
+    private void tryStartRefine(Player player, Inventory gui) {
+        ItemStack input = gui.getItem(RefineGUI.INPUT_SLOT);
+        ItemStack catalyst = gui.getItem(RefineGUI.CATALYST_SLOT);
+
+        if (input == null || input.getType().isAir()) {
+            player.sendMessage(ChatUtil.format("&c[재련] &f재료 아이템을 넣어주세요."));
+            return;
+        }
+
+        // 레시피 찾기
+        RefineRecipe matchedRecipe = null;
+        for (RefineRecipe recipe : recipeCache.values()) {
+            if (isRecipeMatch(recipe, input, catalyst)) {
+                matchedRecipe = recipe;
+                break;
+            }
+        }
+
+        if (matchedRecipe == null) {
+            player.sendMessage(ChatUtil.format("&c[재련] &f일치하는 레시피가 없습니다."));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+
+        // 아이템 소모
+        input.setAmount(input.getAmount() - matchedRecipe.getInput().getAmount());
+        gui.setItem(RefineGUI.INPUT_SLOT, input); // GUI 업데이트
+
+        if (matchedRecipe.getCatalyst() != null && matchedRecipe.getCatalyst().getType() != Material.AIR) {
+            if (catalyst != null) {
+                catalyst.setAmount(catalyst.getAmount() - matchedRecipe.getCatalyst().getAmount());
+                gui.setItem(RefineGUI.CATALYST_SLOT, catalyst);
+            }
+        }
+
+        // 재련 시작
+        startRefineTask(player, matchedRecipe.getId());
+        player.closeInventory(); // 오류 방지를 위해 닫기
+    }
+
+    /** 레시피 매칭 여부 확인 */
+    private boolean isRecipeMatch(RefineRecipe recipe, ItemStack input, ItemStack catalyst) {
+        // 1. 입력 재료 확인
+        if (input.getType() != recipe.getInput().getType()) return false;
+        if (input.getAmount() < recipe.getInput().getAmount()) return false;
+
+        // 2. 촉매 확인
+        ItemStack recipeCat = recipe.getCatalyst();
+        boolean recipeHasCat = (recipeCat != null && recipeCat.getType() != Material.AIR);
+        
+        if (recipeHasCat) {
+            // 촉매가 필요한 레시피인데 촉매 슬롯이 비었거나 틀린 경우
+            if (catalyst == null || catalyst.getType() != recipeCat.getType()) return false;
+            if (catalyst.getAmount() < recipeCat.getAmount()) return false;
+        } else {
+            // 촉매가 필요 없는 레시피인데 촉매 슬롯에 무언가 있는 경우 (엄격한 매칭)
+            if (catalyst != null && catalyst.getType() != Material.AIR) return false;
+        }
+
+        return true;
     }
 
     private void loadActiveTasksFromFile() {
@@ -178,8 +248,6 @@ public class RefineManager {
         public String getRecipeId() { return recipeId; }
         public long getEndTime() { return endTime; }
         public boolean isComplete() { return System.currentTimeMillis() >= endTime; }
-        
-        // [복구됨] 이 메서드가 없어서 에러가 났습니다. 다시 추가했습니다.
         public long getTimeLeft() { return Math.max(0, endTime - System.currentTimeMillis()); }
     }
 }

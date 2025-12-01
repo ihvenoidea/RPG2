@@ -30,6 +30,7 @@ com\mahirung\rpgcore\managers\RefineManager.class
 com\mahirung\rpgcore\listeners\EntityDeathListener.class
 com\mahirung\rpgcore\managers\EnhanceManager$EnhanceData.class
 com\mahirung\rpgcore\listeners\PlayerJoinListener.class
+com\mahirung\rpgcore\gui\SuccessionGUI.class
 com\mahirung\rpgcore\commands\RefineCommand.class
 com\mahirung\rpgcore\hooks\RPGCoreExpansion.class
 com\mahirung\rpgcore\managers\DamageLogManager.class

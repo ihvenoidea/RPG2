@@ -3,6 +3,7 @@ package com.mahirung.rpgcore.managers;
 import com.mahirung.rpgcore.RPGCore;
 import com.mahirung.rpgcore.util.ChatUtil;
 import com.mahirung.rpgcore.util.ItemUtil;
+import dev.lone.itemsadder.api.CustomStack; // ItemsAdder API
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -47,7 +48,7 @@ public class RuneManager {
                         stats.put(statKey, statsSection.getDouble(statKey));
                     }
                 }
-                runeCache.put(itemsAdderId, new RuneData(itemsAdderId, applicableTo, stats));
+                runeCache.put(runeIdKey, new RuneData(runeIdKey, itemsAdderId, applicableTo, stats));
             }
         }
         runeRemovalItemId = config.getString("removal-item.itemsadder-id");
@@ -57,14 +58,19 @@ public class RuneManager {
     public RuneData getRuneData(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return null;
         String id = ItemUtil.getNBTString(item, ITEMSADDER_NBT_KEY);
-        return (id != null) ? runeCache.get(id) : null;
+        if (id == null) return null;
+        for (RuneData data : runeCache.values()) {
+            if (data.getItemsAdderId().equals(id)) return data;
+        }
+        return null;
     }
 
     public boolean isRune(ItemStack item) { return getRuneData(item) != null; }
 
     public boolean isRuneRemovalItem(ItemStack item) {
         if (item == null || runeRemovalItemId == null) return false;
-        return runeRemovalItemId.equals(ItemUtil.getNBTString(item, ITEMSADDER_NBT_KEY));
+        String id = ItemUtil.getNBTString(item, ITEMSADDER_NBT_KEY);
+        return runeRemovalItemId.equals(id);
     }
 
     public ItemStack applyRune(Player player, ItemStack runeItem, ItemStack equipmentItem) {
@@ -72,7 +78,6 @@ public class RuneManager {
         if (runeData == null) return null;
         if (equipmentItem == null || equipmentItem.getType().isAir()) return null;
 
-        // [Fix] 람다식 내부 사용을 위해 final 변수 별도 선언
         final ItemStack checkItem = equipmentItem;
         boolean canApply = runeData.getApplicableTo().stream()
                 .anyMatch(mat -> checkItem.getType().name().contains(mat.toUpperCase()));
@@ -110,12 +115,34 @@ public class RuneManager {
         return equipmentItem;
     }
 
+    /** 룬 아이템 생성 (ItemsAdder 연동) */
+    public ItemStack getRuneItem(String runeId) {
+        RuneData data = runeCache.get(runeId);
+        if (data == null) return null;
+        
+        CustomStack stack = CustomStack.getInstance(data.getItemsAdderId());
+        if (stack != null) {
+            return stack.getItemStack();
+        }
+        return null;
+    }
+    
+    public Set<String> getAllRuneIds() { return runeCache.keySet(); }
+
     public static class RuneData {
         private final String id;
+        private final String itemsAdderId;
         private final List<String> applicableTo;
         private final Map<String, Double> stats;
-        public RuneData(String id, List<String> app, Map<String, Double> stats) { this.id = id; this.applicableTo = app; this.stats = stats; }
+        
+        public RuneData(String id, String iaId, List<String> app, Map<String, Double> stats) { 
+            this.id = id; 
+            this.itemsAdderId = iaId;
+            this.applicableTo = app; 
+            this.stats = stats; 
+        }
         public String getId() { return id; }
+        public String getItemsAdderId() { return itemsAdderId; }
         public List<String> getApplicableTo() { return applicableTo; }
     }
 }

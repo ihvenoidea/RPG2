@@ -15,7 +15,6 @@ public class DamageSkinGUI {
     public void open(Player player) {
         Inventory inv = Bukkit.createInventory(null, 9, GUI_TITLE);
 
-        // [Fix] createItem은 인자 2개만 받으므로, 로어는 addLore로 따로 추가해야 함
         ItemStack info = ItemUtil.createItem(Material.NAME_TAG, "&e[기본 스킨]");
         ItemUtil.addLore(info, 
                 "&7현재 기본 데미지 스킨이 적용되어 있습니다.",

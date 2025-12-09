@@ -41,6 +41,5 @@ com\mahirung\rpgcore\managers\DatabaseManager.class
 com\mahirung\rpgcore\managers\RefineManager$ActiveRefineTask.class
 com\mahirung\rpgcore\managers\SkillManager$SkillType.class
 com\mahirung\rpgcore\RPGCore.class
-com\mahirung\rpgcore\managers\DamageSkinManager$DamageSkinData.class
 com\mahirung\rpgcore\gui\EnhanceGUI.class
 com\mahirung\rpgcore\util\ItemUtil.class

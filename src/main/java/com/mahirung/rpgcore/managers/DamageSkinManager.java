@@ -18,18 +18,23 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.util.Random;
+import java.util.Map;
+import java.util.HashMap;
 
 public class DamageSkinManager {
 
     private final RPGCore plugin;
     private final Random random = new Random();
 
+    private final Map<String, Object> skinCache = new HashMap<>();
+
     public DamageSkinManager(RPGCore plugin) {
         this.plugin = plugin;
+        loadDamageSkins();
     }
 
     public void loadDamageSkins() {
-        // [Fix] 컴파일 오류 방지용 (현재는 기능 없음)
+        skinCache.clear();
     }
 
     public void openGUI(Player player) {
@@ -38,9 +43,7 @@ public class DamageSkinManager {
 
     public void handleGUIClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
-        event.setCancelled(true); 
-
-        // 현재는 선택 기능이 없으므로, GUI 클릭 시 아이템 가져가기만 막음
+        event.setCancelled(true);
     }
 
     /**
@@ -49,13 +52,13 @@ public class DamageSkinManager {
     public void showDamage(LivingEntity victim, double damage, boolean isCritical, Player attacker) {
         if (!plugin.getConfig().getBoolean("damage-skins.enable", true)) return;
 
-        // 1. 위치 설정 (머리 위)
-        Location loc = victim.getLocation().add(0, 1.2, 0); 
+        // 1. 위치 설정 (머리 위로 높여서 띄우도록 수정)
+        Location loc = victim.getLocation().add(0, 1.8, 0); // Y축 1.8로 조정
         
-        // 2. 랜덤 오프셋 (숫자가 겹치지 않게 살짝 흩뿌림)
-        double offsetX = (random.nextDouble() - 0.5) * 0.5;
-        double offsetZ = (random.nextDouble() - 0.5) * 0.5;
-        double offsetY = (random.nextDouble() - 0.5) * 0.3;
+        // 2. 랜덤 오프셋 (config.yml 설정값 사용)
+        double offsetX = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-x", 0.25);
+        double offsetZ = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-x", 0.25);
+        double offsetY = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-y", 0.5);
         loc.add(offsetX, offsetY, offsetZ);
 
         // 3. TextDisplay 엔티티 소환
@@ -67,10 +70,10 @@ public class DamageSkinManager {
         
         if (isCritical) {
             text = ChatUtil.format("&c&l💥 " + damageStr); // 크리티컬: 빨강 + 굵게 + 이모지
-            display.setBackgroundColor(Color.fromARGB(100, 255, 0, 0)); // 배경: 붉은 반투명
+            display.setBackgroundColor(Color.fromARGB(100, 255, 0, 0));
         } else {
             text = ChatUtil.format("&f" + damageStr); // 일반: 흰색
-            display.setBackgroundColor(Color.fromARGB(0, 0, 0, 0)); // 배경: 투명
+            display.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
         }
 
         display.setText(text);
@@ -87,10 +90,11 @@ public class DamageSkinManager {
                 new AxisAngle4f(0, 0, 0, 1)
         ));
 
-        // 6. 삭제 스케줄러 (1초 뒤 삭제)
-        plugin.getServer().getScheduler().runTaskLater(plugin, display::remove, 20L); 
+        // 6. 삭제 스케줄러 (config.yml 설정값 사용)
+        long duration = plugin.getConfig().getLong("damage-skins.display-duration-ticks", 20L);
+        plugin.getServer().getScheduler().runTaskLater(plugin, display::remove, duration); 
         
-        // 7. 애니메이션 (둥실둥실 위로 올라감)
+        // 7. 애니메이션
         animateText(display);
     }
 

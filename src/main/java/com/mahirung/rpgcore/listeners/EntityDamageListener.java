@@ -5,7 +5,7 @@ import com.mahirung.rpgcore.data.PlayerData;
 import com.mahirung.rpgcore.managers.DamageLogManager;
 import com.mahirung.rpgcore.managers.DamageSkinManager;
 import com.mahirung.rpgcore.managers.PlayerDataManager;
-import com.mahirung.rpgcore.util.ItemUtil; // NBT 유틸
+import com.mahirung.rpgcore.util.ItemUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,10 +15,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
-/**
- * 엔티티 데미지 이벤트 리스너
- * - 강화 레벨에 따른 추가 데미지 적용
- */
 public class EntityDamageListener implements Listener {
 
     private final PlayerDataManager playerDataManager;
@@ -26,7 +22,8 @@ public class EntityDamageListener implements Listener {
     private final DamageLogManager damageLogManager;
 
     private static final double DEFENSE_CONSTANT = 100.0;
-    private static final double DAMAGE_PER_ENHANCE_LEVEL = 2.0; // 1강당 데미지 증가량
+    private static final double DAMAGE_PER_ENHANCE_LEVEL = 2.0;
+    private static final double SKILL_DAMAGE_THRESHOLD = 5.0; // 스킬/평타 구분 기준점 (바닐라 평타 데미지보다 높게 설정)
 
     public EntityDamageListener(RPGCore plugin) {
         this.playerDataManager = plugin.getPlayerDataManager();
@@ -39,44 +36,61 @@ public class EntityDamageListener implements Listener {
         if (!(event.getDamager() instanceof Player attacker)) return;
         if (!(event.getEntity() instanceof LivingEntity victim)) return;
 
-        // 바닐라 평타 무시 (스킬만 적용)
-        if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
+        // [중요] 데미지 스킨은 항상 표시 (데미지 스킨은 모든 공격에 대해 출력되도록 위치 변경)
+        // 데미지 계산 로직의 영향을 받지 않도록 스킨 출력 코드를 분리합니다.
 
         PlayerData attackerData = playerDataManager.getPlayerData(attacker.getUniqueId());
-        if (attackerData == null || !attackerData.hasClass()) return;
+        if (attackerData == null || !attackerData.hasClass()) {
+            // 데미지 스킨을 위해 플레이어 데이터가 없는 경우에도 기본 표시를 원하면 여기서 처리 가능
+            damageSkinManager.showDamage(victim, event.getDamage(), false, attacker); // 비RPG 평타에도 스킨 표시
+            return;
+        }
 
-        PlayerData victimData = (victim instanceof Player)
-                ? playerDataManager.getPlayerData(victim.getUniqueId())
-                : null;
+        // ----------------------------------------------------
+        // --- RPG 데미지 계산 (스킬/평타 구분) ---
+        // ----------------------------------------------------
 
-        // 1. 공격력 계산
-        double baseAttack = attackerData.getAttack();
-        double skillDamage = event.getDamage();
-        
-        // [추가됨] 무기 강화 추가 데미지
-        ItemStack weapon = attacker.getInventory().getItemInMainHand();
-        int enhanceLevel = ItemUtil.getNBTInt(weapon, "enhance_level");
-        double enhanceBonus = enhanceLevel * DAMAGE_PER_ENHANCE_LEVEL;
+        double currentEventDamage = event.getDamage();
+        boolean isSkillAttack = currentEventDamage > SKILL_DAMAGE_THRESHOLD 
+                                 || event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK;
 
-        double totalAttack = baseAttack + skillDamage + enhanceBonus;
+        double finalDamage = currentEventDamage; // 초기값은 이벤트 데미지로 설정 (스킬이 아닐 경우)
+        boolean isCritical = false;
 
-        // 2. 방어/치명타 계산
-        double critChance = attackerData.getCritChance();
-        double critDamage = attackerData.getCritDamage();
-        double victimDefense = (victimData != null) ? victimData.getDefense() : 0.0;
+        if (isSkillAttack) {
+            // 스킬 공격: RPG 스탯 적용
+            PlayerData victimData = (victim instanceof Player) ? playerDataManager.getPlayerData(victim.getUniqueId()) : null;
+            
+            double baseAttack = attackerData.getAttack();
+            ItemStack weapon = attacker.getInventory().getItemInMainHand();
+            int enhanceLevel = ItemUtil.getNBTInt(weapon, "enhance_level");
+            double enhanceBonus = enhanceLevel * DAMAGE_PER_ENHANCE_LEVEL;
+            
+            // MythicMobs의 기본 데미지 + RPG 스탯
+            double totalAttack = baseAttack + currentEventDamage + enhanceBonus; 
 
-        double damageReduction = victimDefense / (victimDefense + DEFENSE_CONSTANT);
-        double calculatedDamage = totalAttack * (1.0 - damageReduction);
+            double critChance = attackerData.getCritChance();
+            double critDamage = attackerData.getCritDamage();
+            double victimDefense = (victimData != null) ? victimData.getDefense() : 0.0;
 
-        boolean isCritical = Math.random() < critChance;
-        double finalDamage = isCritical ? calculatedDamage * (1.0 + critDamage) : calculatedDamage;
+            double damageReduction = victimDefense / (victimDefense + DEFENSE_CONSTANT);
+            double calculatedDamage = totalAttack * (1.0 - damageReduction);
 
-        finalDamage = Math.max(0.0, finalDamage);
+            isCritical = Math.random() < critChance;
+            finalDamage = isCritical ? calculatedDamage * (1.0 + critDamage) : calculatedDamage;
 
-        // 3. 적용
+            finalDamage = Math.max(0.0, finalDamage);
+        } 
+        // else: 평타 공격 (finalDamage는 currentEventDamage(바닐라 데미지)로 유지됩니다. 스탯 미적용)
+
+
+        // 5. 최종 데미지 적용
         event.setDamage(finalDamage);
+
+        // 6. 데미지 스킨 표시 (계산된 최종 데미지로 표시)
         damageSkinManager.showDamage(victim, finalDamage, isCritical, attacker);
 
+        // 7. 데미지 기여도 기록
         if (!(victim instanceof Player)) {
             damageLogManager.addDamage(victim, attacker, finalDamage);
         }

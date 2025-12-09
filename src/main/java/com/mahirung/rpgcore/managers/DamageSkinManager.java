@@ -52,50 +52,57 @@ public class DamageSkinManager {
     public void showDamage(LivingEntity victim, double damage, boolean isCritical, Player attacker) {
         if (!plugin.getConfig().getBoolean("damage-skins.enable", true)) return;
 
-        // 1. 위치 설정 (머리 위로 높여서 띄우도록 수정)
-        Location loc = victim.getLocation().add(0, 1.8, 0); // Y축 1.8로 조정
-        
-        // 2. 랜덤 오프셋 (config.yml 설정값 사용)
-        double offsetX = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-x", 0.25);
-        double offsetZ = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-x", 0.25);
-        double offsetY = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-y", 0.5);
-        loc.add(offsetX, offsetY, offsetZ);
+        // [Fix] try-catch 블록으로 감싸서 TextDisplay 오류 발생 시에도 메인 이벤트가 멈추지 않게 함
+        try {
+            // 1. 위치 설정
+            Location loc = victim.getLocation().add(0, 1.8, 0); 
+            
+            // 2. 랜덤 오프셋 
+            double offsetX = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-x", 0.25);
+            double offsetZ = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-x", 0.25);
+            double offsetY = (random.nextDouble() - 0.5) * plugin.getConfig().getDouble("damage-skins.font-offset-y", 0.5);
+            loc.add(offsetX, offsetY, offsetZ);
 
-        // 3. TextDisplay 엔티티 소환
-        TextDisplay display = (TextDisplay) victim.getWorld().spawnEntity(loc, EntityType.TEXT_DISPLAY);
-        
-        // 4. 텍스트 꾸미기
-        String damageStr = String.format("%.0f", damage);
-        String text;
-        
-        if (isCritical) {
-            text = ChatUtil.format("&c&l💥 " + damageStr); // 크리티컬: 빨강 + 굵게 + 이모지
-            display.setBackgroundColor(Color.fromARGB(100, 255, 0, 0));
-        } else {
-            text = ChatUtil.format("&f" + damageStr); // 일반: 흰색
-            display.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+            // 3. TextDisplay 엔티티 소환
+            TextDisplay display = (TextDisplay) victim.getWorld().spawnEntity(loc, EntityType.TEXT_DISPLAY);
+            
+            // 4. 텍스트 꾸미기
+            String damageStr = String.format("%.0f", damage);
+            String text;
+            
+            if (isCritical) {
+                text = ChatUtil.format("&c&l💥 " + damageStr); 
+                display.setBackgroundColor(Color.fromARGB(100, 255, 0, 0));
+            } else {
+                text = ChatUtil.format("&f" + damageStr);
+                display.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+            }
+
+            display.setText(text);
+            display.setBillboard(Display.Billboard.CENTER);
+            display.setSeeThrough(true);
+            display.setShadowed(true);
+
+            // 5. 크기 조절
+            float scale = isCritical ? 1.5f : 1.0f;
+            display.setTransformation(new Transformation(
+                    new Vector3f(0, 0, 0),
+                    new AxisAngle4f(0, 0, 0, 1),
+                    new Vector3f(scale, scale, scale),
+                    new AxisAngle4f(0, 0, 0, 1)
+            ));
+
+            // 6. 삭제 스케줄러 (config.yml 설정값 사용)
+            long duration = plugin.getConfig().getLong("damage-skins.display-duration-ticks", 20L);
+            plugin.getServer().getScheduler().runTaskLater(plugin, display::remove, duration); 
+            
+            // 7. 애니메이션
+            animateText(display);
+            
+        } catch (Exception e) {
+            // TextDisplay 관련 오류가 발생하면 로그를 남기고 종료 (이벤트 충돌 방지)
+            plugin.getLogger().warning("데미지 스킨 표시 중 오류 발생: " + e.getMessage());
         }
-
-        display.setText(text);
-        display.setBillboard(Display.Billboard.CENTER);
-        display.setSeeThrough(true);
-        display.setShadowed(true);
-
-        // 5. 크기 조절 (크리티컬은 1.5배)
-        float scale = isCritical ? 1.5f : 1.0f;
-        display.setTransformation(new Transformation(
-                new Vector3f(0, 0, 0),
-                new AxisAngle4f(0, 0, 0, 1),
-                new Vector3f(scale, scale, scale),
-                new AxisAngle4f(0, 0, 0, 1)
-        ));
-
-        // 6. 삭제 스케줄러 (config.yml 설정값 사용)
-        long duration = plugin.getConfig().getLong("damage-skins.display-duration-ticks", 20L);
-        plugin.getServer().getScheduler().runTaskLater(plugin, display::remove, duration); 
-        
-        // 7. 애니메이션
-        animateText(display);
     }
 
     private void animateText(TextDisplay display) {

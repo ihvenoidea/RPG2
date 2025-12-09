@@ -19,6 +19,7 @@ D:\minecraft\havenrpgcore\src\main\java\com\mahirung\rpgcore\listeners\Inventory
 D:\minecraft\havenrpgcore\src\main\java\com\mahirung\rpgcore\listeners\InventoryDragListener.java
 D:\minecraft\havenrpgcore\src\main\java\com\mahirung\rpgcore\listeners\NPCInteractListener.java
 D:\minecraft\havenrpgcore\src\main\java\com\mahirung\rpgcore\listeners\PlayerDropItemListener.java
+D:\minecraft\havenrpgcore\src\main\java\com\mahirung\rpgcore\listeners\PlayerInteractEntityListener.java
 D:\minecraft\havenrpgcore\src\main\java\com\mahirung\rpgcore\listeners\PlayerInteractListener.java
 D:\minecraft\havenrpgcore\src\main\java\com\mahirung\rpgcore\listeners\PlayerJoinListener.java
 D:\minecraft\havenrpgcore\src\main\java\com\mahirung\rpgcore\listeners\PlayerMoveListener.java

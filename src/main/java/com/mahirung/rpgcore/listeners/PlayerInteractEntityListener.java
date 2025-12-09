@@ -11,56 +11,48 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
-public class PlayerInteractListener implements Listener {
+public class PlayerInteractEntityListener implements Listener {
 
     private final PlayerDataManager playerDataManager;
     private final SkillManager skillManager;
     private final ClassManager classManager;
 
-    public PlayerInteractListener(RPGCore plugin) {
+    public PlayerInteractEntityListener(RPGCore plugin) {
         this.playerDataManager = plugin.getPlayerDataManager();
         this.skillManager = plugin.getSkillManager();
         this.classManager = plugin.getClassManager();
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    public void onPlayerInteract(PlayerInteractEvent event) {
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        // 1. 기본 검증 (오른손 클릭만 처리)
         if (event.getHand() != EquipmentSlot.HAND) return;
         
         Player player = event.getPlayer();
-        ItemStack item = event.getItem();
+        ItemStack item = player.getInventory().getItem(EquipmentSlot.HAND);
         if (item == null || item.getType() == Material.AIR) return;
 
+        // 2. RPG 데이터 확인 및 직업 전용 무기 체크
         PlayerData data = playerDataManager.getPlayerData(player.getUniqueId());
         if (data == null || !data.hasClass()) return;
-
         if (!classManager.isClassWeapon(data, item)) return;
 
-        Action action = event.getAction();
         boolean isShift = player.isSneaking();
 
-        // Left Click (AIR/BLOCK)
-        if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
-            if (isShift) {
-                skillManager.executeSkill(player, data, SkillType.SKILL_2);
-            } else {
-                skillManager.executeSkill(player, data, SkillType.BASIC_ATTACK);
-            }
-            event.setCancelled(true); // [필수] 스킬 발동 시 바닐라 동작 강제 취소
-        } 
-        // Right Click (AIR/BLOCK)
-        else if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
-            if (isShift) {
-                skillManager.executeSkill(player, data, SkillType.SKILL_3);
-            } else {
-                skillManager.executeSkill(player, data, SkillType.SKILL_1);
-            }
-            event.setCancelled(true); // [필수] 스킬 발동 시 바닐라 동작 강제 취소
+        // 3. Right-Click Entity 처리 (우클릭은 PlayerInteractEntityEvent로 들어옵니다.)
+        if (isShift) {
+            // Shift + 우클릭 -> SKILL_3
+            skillManager.executeSkill(player, data, SkillType.SKILL_3);
+        } else {
+            // 일반 우클릭 -> SKILL_1
+            skillManager.executeSkill(player, data, SkillType.SKILL_1);
         }
+        
+        // 4. 이벤트 취소 (바닐라 엔티티 상호작용 방지)
+        event.setCancelled(true);
     }
 }
